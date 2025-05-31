@@ -1,13 +1,12 @@
-from flask import Flask, render_template, request
+from flask import Flask
+import os
+
 app = Flask(__name__)
 
 @app.route('/')
-def index():
-    return render_template('form.html')
+def home():
+    return 'Hello from Flask on Render!'
 
 if __name__ == '__main__':
-    app.run(debug=True)
-if __name__ == "__main__":
-    import os
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 10000))  # Render sets PORT as an environment variable
     app.run(host='0.0.0.0', port=port)
