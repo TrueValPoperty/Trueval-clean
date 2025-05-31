@@ -40,3 +40,18 @@ def valuation():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+    from airtable import Airtable
+import os
+
+AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
+AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
+AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
+
+airtable = Airtable(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, AIRTABLE_API_KEY)
+
+def log_valuation_to_airtable(postcode, zoopla_price):
+    airtable.insert({
+        'postcode': postcode,
+        'zoopla_valuation': int(zoopla_price),
+        'date': datetime.now().isoformat()
+    })
