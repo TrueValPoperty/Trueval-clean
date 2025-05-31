@@ -55,3 +55,48 @@ def log_valuation_to_airtable(postcode, zoopla_price):
         'zoopla_valuation': int(zoopla_price),
         'date': datetime.now().isoformat()
     })
+from airtable import Airtable
+from datetime import datetime
+import os
+
+AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
+AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
+AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
+
+airtable = Airtable(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, AIRTABLE_API_KEY)
+
+def log_valuation(postcode, zoopla_valuation, ai_valuation=None):
+    record = {
+        "postcode": postcode,
+        "zoopla_valuation": int(zoopla_valuation),
+        "date": datetime.now().isoformat()
+    }
+    if ai_valuation:
+        record["ai_valuation"] = int(ai_valuation)
+
+    try:
+        airtable.insert(record)
+        return True
+    except Exception as e:
+        print(f"Airtable log failed: {e}")
+        return False
+from airtable import Airtable
+import pandas as pd
+import os
+
+AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
+AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
+AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
+
+airtable = Airtable(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, AIRTABLE_API_KEY)
+
+def fetch_data_as_dataframe():
+    records = airtable.get_all()
+
+    rows = []
+    for record in records:
+        fields = record.get('fields', {})
+        rows.append(fields)
+
+    df = pd.DataFrame(rows)
+    return df        
