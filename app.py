@@ -15,8 +15,39 @@ if __name__ == '__main__':
     app.run(host='0.0.0.0', port=port)
 from flask import request, jsonify
 
+from flask import Flask, request, jsonify
+from dotenv import load_dotenv
+from zoopla import Zoopla
+import os
+
+load_dotenv()
+
+app = Flask(__name__)
+zoopla = Zoopla(api_key=os.getenv('ZOOPLA_API_KEY'))
+
 @app.route('/valuation', methods=['POST'])
 def valuation():
+    data = request.get_json()
+    postcode = data.get('postcode', '').strip().upper()
+
+    if not postcode:
+        return jsonify({"error": "Postcode is required"}), 400
+
+    try:
+        average = zoopla.average_area_sold_price({'area': postcode})
+
+        if not average or not average.get('average_sold_price_5year'):
+            return jsonify({"error": "No data available"}), 404
+
+        valuation = average['average_sold_price_5year']
+        return jsonify({
+            "postcode": postcode,
+            "valuation": f"£{int(valuation):,}",
+            "status": "success"
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     data = request.get_json()
     postcode = data.get('postcode')
 
