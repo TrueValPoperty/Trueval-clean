@@ -6,6 +6,8 @@ from airtable_logger import log_valuation
 from dotenv import load_dotenv
 
 load_dotenv()
+import sklearn
+print("Running scikit-learn version:", sklearn.__version__)
 
 API_TOKEN = os.getenv("TRAIN_API_TOKEN")
 model = joblib.load("ai_estimator.pkl")
