@@ -1,0 +1,12 @@
+{
+  "name": "zoopla-scraper",
+  "version": "1.0.0",
+  "main": "scraper.js",
+  "scripts": {
+    "start": "node scraper.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "puppeteer": "^21.3.8"
+  }
+}
