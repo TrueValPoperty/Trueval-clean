@@ -88,3 +88,19 @@ def train():
         return jsonify({"status": "success", "message": message}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+import os
+from flask import request
+
+API_TOKEN = os.getenv("TRAIN_API_TOKEN")
+
+@app.route('/train', methods=['POST'])
+def train():
+    token = request.headers.get("Authorization")
+    if token != f"Bearer {API_TOKEN}":
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        message = retrain_model()
+        return jsonify({"status": "success", "message": message}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
