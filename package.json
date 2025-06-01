@@ -1,12 +1,12 @@
 {
   "name": "zoopla-scraper",
   "version": "1.0.0",
-  "main": "scraper.js",
+  "description": "Scrape Zoopla South West listings with Puppeteer",
+  "main": "index.js",
   "scripts": {
-    "start": "node scraper.js"
+    "start": "node index.js"
   },
   "dependencies": {
-    "dotenv": "^16.0.3",
     "puppeteer": "^21.3.8"
   }
 }
