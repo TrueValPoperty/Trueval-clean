@@ -1,26 +1,29 @@
-from airtable import Airtable
-import os
-import pandas as pd
 
+import os
+from airtable import Airtable
+from dotenv import load_dotenv
+
+load_dotenv()
+
+AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
 AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
 AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
-AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
 
 airtable = Airtable(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, AIRTABLE_API_KEY)
 
-def get_training_data():
-    all_records = airtable.get_all()
-    records = []
-    for record in all_records:
-        fields = record["fields"]
-        if all(k in fields for k in ("bedrooms", "latitude", "longitude", "epc_rating", "heating_type", "retrofit_readiness", "actual_price")):
-            records.append({
-                "bedrooms": fields["bedrooms"],
-                "latitude": fields["latitude"],
-                "longitude": fields["longitude"],
-                "epc_rating": fields["epc_rating"],
-                "heating_type": fields["heating_type"],
-                "retrofit_readiness": fields["retrofit_readiness"],
-                "actual_price": fields["actual_price"]
-            })
-    return pd.DataFrame(records)
+def log_valuation(data):
+    try:
+        record = {
+            "Postcode": data.get("postcode", ""),
+            "Bedrooms": data.get("bedrooms", 0),
+            "Bathrooms": data.get("bathrooms", 0),
+            "Square Feet": data.get("square_feet", 0),
+            "EPC Rating": data.get("epc_rating", ""),
+            "Heating Type": data.get("heating_type", ""),
+            "AI Estimate": data.get("ai_estimate", 0),
+            "Confidence": data.get("confidence", ""),
+            "Email": data.get("email", "")
+        }
+        airtable.insert(record)
+    except Exception as e:
+        print("Airtable logging error:", e)
