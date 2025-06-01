@@ -11,3 +11,4 @@ zoopla
 python-dotenv
 airtable-python-wrapper
 joblib
+scikit-learn
