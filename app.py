@@ -1,40 +1,62 @@
-from flask import Flask, request, render_template, jsonify
-from airtable_logger import get_training_data
-from sklearn.tree import DecisionTreeRegressor
-import pandas as pd
+
+from flask import Flask, request, jsonify, render_template
 import joblib
+import numpy as np
 import os
+from airtable_logger import log_valuation
+from epc_client import fetch_epc_data
 
 app = Flask(__name__)
 
-API_TOKEN = os.getenv("TRAIN_API_TOKEN")
+# Load AI model
+model = joblib.load("ai_estimator.pkl")
 
-@app.route("/train", methods=["POST"])
-def train_model():
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        return jsonify({"error": "Missing or invalid token"}), 401
+@app.route("/")
+def index():
+    return render_template("form.html")
 
-    token = auth_header.split(" ")[1]
-    if token != API_TOKEN:
-        return jsonify({"error": "Unauthorized"}), 403
-
+@app.route("/valuation", methods=["POST"])
+def valuation():
     try:
-        df = get_training_data()
-    except Exception as e:
-        return jsonify({"error": f"Failed to fetch Airtable data: {e}"}), 500
+        # Get form data
+        data = request.form
+        postcode = data.get("postcode")
+        bedrooms = int(data.get("bedrooms"))
+        property_type = data.get("property_type")
+        tenure = data.get("tenure")
+        email = data.get("email")
 
-    try:
-        df["epc_rating"] = df["epc_rating"].astype("category").cat.codes
-        df["heating_type"] = df["heating_type"].astype("category").cat.codes
-        X = df[["bedrooms", "latitude", "longitude", "epc_rating", "heating_type", "retrofit_readiness"]]
-        y = df["actual_price"]
-        model = DecisionTreeRegressor()
-        model.fit(X, y)
-        joblib.dump(model, "ai_estimator.pkl")
-        return jsonify({"status": "Training successful", "rows": len(df)}), 200
+        # Fetch EPC data
+        epc_data = fetch_epc_data(postcode)
+        epc_rating = epc_data.get("epc_rating", "Unknown")
+        heating_type = epc_data.get("heating_type", "Unknown")
+        retrofit_readiness = epc_data.get("retrofit_readiness", 0.5)
+
+        # Combine data for prediction
+        features = np.array([[bedrooms, retrofit_readiness]])
+        ai_estimate = float(model.predict(features)[0])
+
+        # Confidence score logic
+        confidence_score = 0.88 if epc_rating != "Unknown" else 0.6
+
+        # Log everything to Airtable
+        log_valuation({
+            "Postcode": postcode,
+            "Bedrooms": bedrooms,
+            "Property Type": property_type,
+            "Tenure": tenure,
+            "Email": email,
+            "AI Estimate": ai_estimate,
+            "EPC Rating": epc_rating,
+            "Heating Type": heating_type,
+            "Retrofit Readiness": retrofit_readiness,
+            "Confidence Score": confidence_score
+        })
+
+        return render_template("form.html", estimate=ai_estimate, confidence=confidence_score)
+
     except Exception as e:
-        return jsonify({"error": f"Training failed: {e}"}), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
