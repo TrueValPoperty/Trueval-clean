@@ -3,9 +3,9 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 
-from mock_zoopla import Zoopla
-from airtable_logger import log_valuation
+from mock_zoopla import Zoopla  # Use mock for now
 from epc_client import fetch_epc_data
+from airtable_logger import log_valuation
 
 load_dotenv()
 app = Flask(__name__)
@@ -18,46 +18,58 @@ def determine_retrofit_ready(epc, heating_type, floor_area):
 
 @app.route('/')
 def home():
-    return "Welcome to TrueVal – AI-Powered Valuations + Retrofit Readiness"
+    return "Welcome to TrueVal – AI Property Valuations + Retrofit Readiness"
 
 @app.route('/valuation', methods=['POST'])
 def valuation():
     data = request.get_json()
     postcode = data.get('postcode', '').strip().upper()
+    user_email = data.get('email')
+    bedrooms = data.get('bedrooms')
+    bathrooms = data.get('bathrooms')
+
     if not postcode:
         return jsonify({"error": "Postcode is required"}), 400
 
     try:
+        # Use mock Zoopla or real one once API key arrives
         result = zoopla.average_area_sold_price({'area': postcode})
-        price = result.get('average_sold_price_5year') or result.get('average_sold_price')
+        ai_estimate = result.get('average_sold_price_5year') or result.get('average_sold_price')
 
-        if not price:
+        if not ai_estimate:
             return jsonify({"error": "No valuation data available"}), 404
 
+        # Fetch EPC data
         epc_data = fetch_epc_data(postcode)
         epc_rating = epc_data.get("current-energy-rating") if epc_data else None
         heating_type = epc_data.get("mainheat-description") if epc_data else None
         floor_area = float(epc_data.get("total-floor-area", 0)) if epc_data else None
-
         retrofit_ready = determine_retrofit_ready(epc_rating, heating_type, floor_area)
 
+        # Log full valuation with AI angle into Airtable
         log_valuation(
             postcode=postcode,
-            zoopla_valuation=price,
-            ai_valuation=None,
+            ai_estimate=ai_estimate,
+            floor_area=floor_area,
             epc_rating=epc_rating,
             heating_type=heating_type,
-            floor_area=floor_area,
-            retrofit_ready=retrofit_ready
+            bedrooms=bedrooms,
+            bathrooms=bathrooms,
+            user_email=user_email,
+            confidence_score=0.9,  # Placeholder
+            notes=f"Retrofit ready: {retrofit_ready}",
+            source="Mock AI Estimate"
         )
 
         return jsonify({
             "postcode": postcode,
-            "valuation": f"£{int(price):,}",
+            "valuation": f"£{int(ai_estimate):,}",
             "epc_rating": epc_rating,
             "heating_type": heating_type,
             "floor_area_m2": floor_area,
             "retrofit_ready": retrofit_ready,
+            "confidence_score": 0.9,
+            "source": "Mock AI Estimate",
             "status": "success"
         }), 200
 
