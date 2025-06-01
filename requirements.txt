@@ -1,4 +1,10 @@
 scikit-learn==1.6.1
 pandas==2.2.2
 joblib==1.4.2
-gunicorn
+gunicorn==21.2.0
+numpy==2.2.6
+python-dateutil==2.9.0.post0
+pytz==2025.2
+six==1.17.0
+threadpoolctl==3.6.0
+tzdata==2025.2
