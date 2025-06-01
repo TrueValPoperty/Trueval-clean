@@ -1,23 +1,29 @@
 from flask import Flask, request, jsonify
 from dotenv import load_dotenv
 import os
+from datetime import datetime
 
 from zoopla_client.zoopla import Zoopla
+from airtable_logger import log_valuation
+from epc_client import fetch_epc_data
 
 load_dotenv()
-
 app = Flask(__name__)
-zoopla = Zoopla(api_key=os.getenv('ZOOPLA_API_KEY'))
+zoopla = Zoopla(api_key=os.getenv("ZOOPLA_API_KEY"))
+
+def determine_retrofit_ready(epc, heating_type, floor_area):
+    if epc in ["D", "E", "F", "G"] and heating_type == "Gas" and floor_area and floor_area > 70:
+        return True
+    return False
 
 @app.route('/')
 def home():
-    return "Welcome to TrueVal – AI-Powered Property Valuations"
+    return "Welcome to TrueVal – AI-Powered Valuations + Retrofit Readiness"
 
 @app.route('/valuation', methods=['POST'])
 def valuation():
     data = request.get_json()
     postcode = data.get('postcode', '').strip().upper()
-
     if not postcode:
         return jsonify({"error": "Postcode is required"}), 400
 
@@ -28,9 +34,30 @@ def valuation():
         if not price:
             return jsonify({"error": "No valuation data available"}), 404
 
+        epc_data = fetch_epc_data(postcode)
+        epc_rating = epc_data.get("current-energy-rating") if epc_data else None
+        heating_type = epc_data.get("mainheat-description") if epc_data else None
+        floor_area = float(epc_data.get("total-floor-area", 0)) if epc_data else None
+
+        retrofit_ready = determine_retrofit_ready(epc_rating, heating_type, floor_area)
+
+        log_valuation(
+            postcode=postcode,
+            zoopla_valuation=price,
+            ai_valuation=None,
+            epc_rating=epc_rating,
+            heating_type=heating_type,
+            floor_area=floor_area,
+            retrofit_ready=retrofit_ready
+        )
+
         return jsonify({
             "postcode": postcode,
             "valuation": f"£{int(price):,}",
+            "epc_rating": epc_rating,
+            "heating_type": heating_type,
+            "floor_area_m2": floor_area,
+            "retrofit_ready": retrofit_ready,
             "status": "success"
         }), 200
 
@@ -40,63 +67,3 @@ def valuation():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-    from airtable import Airtable
-import os
-
-AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
-AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
-AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
-
-airtable = Airtable(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, AIRTABLE_API_KEY)
-
-def log_valuation_to_airtable(postcode, zoopla_price):
-    airtable.insert({
-        'postcode': postcode,
-        'zoopla_valuation': int(zoopla_price),
-        'date': datetime.now().isoformat()
-    })
-from airtable import Airtable
-from datetime import datetime
-import os
-
-AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
-AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
-AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
-
-airtable = Airtable(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, AIRTABLE_API_KEY)
-
-def log_valuation(postcode, zoopla_valuation, ai_valuation=None):
-    record = {
-        "postcode": postcode,
-        "zoopla_valuation": int(zoopla_valuation),
-        "date": datetime.now().isoformat()
-    }
-    if ai_valuation:
-        record["ai_valuation"] = int(ai_valuation)
-
-    try:
-        airtable.insert(record)
-        return True
-    except Exception as e:
-        print(f"Airtable log failed: {e}")
-        return False
-from airtable import Airtable
-import pandas as pd
-import os
-
-AIRTABLE_BASE_ID = os.getenv("AIRTABLE_BASE_ID")
-AIRTABLE_TABLE_NAME = os.getenv("AIRTABLE_TABLE_NAME")
-AIRTABLE_API_KEY = os.getenv("AIRTABLE_API_KEY")
-
-airtable = Airtable(AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME, AIRTABLE_API_KEY)
-
-def fetch_data_as_dataframe():
-    records = airtable.get_all()
-
-    rows = []
-    for record in records:
-        fields = record.get('fields', {})
-        rows.append(fields)
-
-    df = pd.DataFrame(rows)
-    return df        
