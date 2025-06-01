@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 from datetime import datetime
 
-from zoopla_client.zoopla import Zoopla
+from mock_zoopla import Zoopla
 from airtable_logger import log_valuation
 from epc_client import fetch_epc_data
 
