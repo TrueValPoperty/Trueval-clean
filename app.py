@@ -1,65 +1,68 @@
 
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify
 import joblib
-import numpy as np
 import os
 from airtable_logger import log_valuation
-from epc_client import fetch_epc_data
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_TOKEN = os.getenv("TRAIN_API_TOKEN")
+model = joblib.load("ai_estimator.pkl")
 
 app = Flask(__name__)
 
-# Load AI model
-model = joblib.load("ai_estimator.pkl")
-
-@app.route("/")
+@app.route('/')
 def index():
-    return render_template("form.html")
+    return jsonify({"message": "Welcome to TrueVal AI Property Valuations"}), 200
 
-@app.route("/valuation", methods=["POST"])
+@app.route('/valuation', methods=['POST'])
 def valuation():
     try:
-        # Get form data
-        data = request.form
-        postcode = data.get("postcode")
-        bedrooms = int(data.get("bedrooms"))
-        property_type = data.get("property_type")
-        tenure = data.get("tenure")
-        email = data.get("email")
+        data = request.get_json()
+        features = [
+            data.get("bedrooms", 0),
+            data.get("bathrooms", 0),
+            data.get("square_feet", 0),
+            data.get("postcode", ""),
+            data.get("epc_rating", ""),
+            data.get("heating_type", ""),
+        ]
+        # Reshape and predict
+        prediction = model.predict([features])[0]
 
-        # Fetch EPC data
-        epc_data = fetch_epc_data(postcode)
-        epc_rating = epc_data.get("epc_rating", "Unknown")
-        heating_type = epc_data.get("heating_type", "Unknown")
-        retrofit_readiness = epc_data.get("retrofit_readiness", 0.5)
+        response = {
+            "ai_estimate": round(prediction, 2),
+            "epc_rating": data.get("epc_rating"),
+            "heating_type": data.get("heating_type"),
+            "confidence": "medium",
+        }
 
-        # Combine data for prediction
-        features = np.array([[bedrooms, retrofit_readiness]])
-        ai_estimate = float(model.predict(features)[0])
-
-        # Confidence score logic
-        confidence_score = 0.88 if epc_rating != "Unknown" else 0.6
-
-        # Log everything to Airtable
+        # Log to Airtable
         log_valuation({
-            "Postcode": postcode,
-            "Bedrooms": bedrooms,
-            "Property Type": property_type,
-            "Tenure": tenure,
-            "Email": email,
-            "AI Estimate": ai_estimate,
-            "EPC Rating": epc_rating,
-            "Heating Type": heating_type,
-            "Retrofit Readiness": retrofit_readiness,
-            "Confidence Score": confidence_score
+            **data,
+            "ai_estimate": response["ai_estimate"],
+            "confidence": response["confidence"]
         })
 
-        return render_template("form.html", estimate=ai_estimate, confidence=confidence_score)
+        return jsonify(response)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == "__main__":
+@app.route('/train', methods=['POST'])
+def train():
+    token = request.headers.get('Authorization')
+    if token != f"Bearer {API_TOKEN}":
+        return jsonify({"error": "Unauthorized"}), 401
+
+    try:
+        from train_model import train_and_save_model
+        train_and_save_model()
+        return jsonify({"message": "Model retrained successfully."}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == '__main__':
     app.run(debug=True)
-    @app.route("/")
-def index():
-    return redirect("/valuation")  # or return "Welcome to TrueVal!"
