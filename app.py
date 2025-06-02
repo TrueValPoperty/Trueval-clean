@@ -2,30 +2,32 @@
 from flask import Flask, request, jsonify
 import joblib
 import traceback
+import numpy as np
+import pandas as pd
 
 app = Flask(__name__)
 
 try:
     model = joblib.load("ai_estimator.pkl")
 except Exception as e:
-    model = None
     print("Model load failed:", e)
+    model = None
 
 @app.route('/')
 def index():
-    return jsonify(status="OK", message="TrueVal backend is running")
+    return "TrueVal AI Property Valuation API"
 
-@app.route('/valuation', methods=['POST'])
-def valuation():
-    if not model:
-        return jsonify({"error": "Model not loaded"}), 500
-
+@app.route('/predict', methods=['POST'])
+def predict():
+    if model is None:
+        return jsonify({'error': 'Model not loaded'}), 500
     try:
         input_data = request.get_json()
-        prediction = model.predict([list(input_data.values())])
-        return jsonify({"valuation": prediction[0]})
+        df = pd.DataFrame([input_data])
+        prediction = model.predict(df)[0]
+        return jsonify({'predicted_price': prediction})
     except Exception as e:
-        return jsonify({"error": str(e), "trace": traceback.format_exc()}), 500
+        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=10000)
