@@ -1,0 +1,8 @@
+
+Schema for property_data.csv:
+- price (float): Final sale price of the property.
+- bedrooms (int): Number of bedrooms.
+- bathrooms (int): Number of bathrooms.
+- square_feet (float): Total internal area in square feet.
+- epc_rating (str): EPC rating (A-G).
+- heating_type (str): Heating system type (e.g. Gas, Electric, Heat pump).
