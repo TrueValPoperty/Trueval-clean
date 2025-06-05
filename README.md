@@ -15,3 +15,23 @@
 
 ## 🧱 Project Structure
 
+Trueval-clean/
+├── app.py # Flask app with HTML form
+├── predict_api.py # REST API endpoint for /predict
+├── train_model.py # AI model training script
+├── trueval_model.pkl # Trained ML model
+├── trueval_data.csv # Sample dataset
+├── requirements.txt # Python dependencies
+└── templates/ # HTML templates
+├── form.html
+├── map.html
+└── pdf_template.html
+
+---
+
+## 🛠️ Setup Instructions
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/YOUR_USERNAME/trueval-clean.git
+cd trueval-clean
