@@ -10,3 +10,10 @@ TrueVal is a Generative AI-powered property valuation platform focused on delive
 ---
 
 Visit: [trueval.co.uk](http://trueval.co.uk)  
+
+## Contact
+
+For questions, feedback, or support:
+
+- William Tyler-Street: [williamtylerstreet@gmail.com](mailto:williamtylerstreet@gmail.com)
+- TrueVal Support: [hello@trueval.co.uk](mailto:hello@trueval.co.uk)
