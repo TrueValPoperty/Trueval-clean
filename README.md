@@ -93,9 +93,4 @@ MIT License – © 2025 William Tyler-Street / TrueVal
 
 ## 💬 Questions or Contributions?
 
-## Contact
-
-Open an issue or reach out via email:
-
-- William Tyler-Street: [williamtylerstreet@gmail.com](mailto:williamtylerstreet@gmail.com)  
-- TrueVal Support: [hello@trueval.co.uk](mailto:hello@trueval.co.uk)
+Open an issue or reach out to [williamtylerstreet@gmail.com](mailto:williamtylerstreet@gmail.com).
