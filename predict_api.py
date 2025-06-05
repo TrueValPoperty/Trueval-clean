@@ -12,7 +12,15 @@ def predict():
         data = request.get_json(force=True)
         print("Received data:", data)
 
-        features = np.array([[data['bedrooms'], data['bathrooms'], data['sqft']]])
+        epc_map = {'A': 7, 'B': 6, 'C': 5, 'D': 4, 'E': 3, 'F': 2, 'G': 1}
+        epc_numeric = epc_map.get(str(data.get('epc_rating', '')).upper(), 0)
+
+        features = np.array([[
+            data['bedrooms'],
+            data['bathrooms'],
+            data['sqft'],
+            epc_numeric
+        ]])
         prediction = model.predict(features)
         print("Prediction:", prediction)
 
