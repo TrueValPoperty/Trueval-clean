@@ -1,11 +1,35 @@
+
 <!DOCTYPE html>
 <html>
-<head><title>TrueVal Form</title></head>
+<head>
+    <title>TrueVal Property Valuation</title>
+</head>
 <body>
-    <h1>Enter Postcode</h1>
-    <form action="/estimate" method="post">
-        <input type="text" name="postcode" required>
-        <input type="submit" value="Get Estimate">
+    <h2>Enter Property Details</h2>
+    {% if prediction %}
+        <h3>Estimated Value: £{{ prediction }}</h3>
+    {% endif %}
+    {% if error %}
+        <p style="color: red;">Error: {{ error }}</p>
+    {% endif %}
+    <form method="POST">
+        Bedrooms: <input type="number" name="bedrooms" required><br>
+        Bathrooms: <input type="number" name="bathrooms" required><br>
+        Size (sqft): <input type="number" name="sqft" step="0.1" required><br>
+        EPC Rating: 
+        <select name="epc_rating" required>
+            <option value="A">A</option><option value="B">B</option><option value="C">C</option>
+            <option value="D">D</option><option value="E">E</option><option value="F">F</option><option value="G">G</option>
+        </select><br>
+        Heating Type:
+        <select name="heating_type" required>
+            <option value="gas">Gas</option>
+            <option value="electric">Electric</option>
+            <option value="oil">Oil</option>
+            <option value="biomass">Biomass</option>
+            <option value="heat pump">Heat Pump</option>
+        </select><br><br>
+        <button type="submit">Get Valuation</button>
     </form>
 </body>
 </html>
