@@ -1,7 +1,20 @@
 services:
   - type: web
-    name: zoopla-scraper
-    env: node
+    name: trueval-api
+    runtime: python
+    repo: https://github.com/your-username/trueval-api
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn predict_api:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
     plan: free
-    buildCommand: "npm install"
-    startCommand: "npm start"
+    region: oregon
+
+  - type: static
+    name: trueval-frontend
+    repo: https://github.com/your-username/trueval-react
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    plan: free
+    region: oregon
