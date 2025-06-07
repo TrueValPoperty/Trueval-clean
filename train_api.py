@@ -49,8 +49,13 @@ def train_model():
 @app.route("/train", methods=["POST"])
 def train_endpoint():
     auth_header = request.headers.get("Authorization")
-    if not auth_header or auth_header != f"Bearer {AUTH_TOKEN}":
-        return jsonify({"error": "Unauthorized"}), 403
+print(f"Received Authorization header: {auth_header}")
+
+if auth_header != f"Bearer {AUTH_TOKEN}":
+    print("❌ Unauthorized: Token does not match.")
+    return jsonify({"error": "Unauthorized"}), 403
+
+print("✅ Authorized request received.")
 
     result = train_model()
     return jsonify(result)
