@@ -45,52 +45,11 @@ def train_model():
         "features": list(features.columns)
     }
 
-# Token-protected training endpoint
+# /train route
 @app.route("/train", methods=["POST"])
 def train_endpoint():
     auth_header = request.headers.get("Authorization")
-    @app.route("/predict", methods=["POST"])
-def predict_endpoint():
-    auth_header = request.headers.get("Authorization")
-    expected = f"Bearer {AUTH_TOKEN}"
-    
-    if auth_header != expected:
-        return jsonify({"error": "Unauthorized"}), 403
-
-    if not os.path.exists(MODEL_FILE):
-        return jsonify({"error": "Model file not found. Please train the model first."}), 400
-
-    model = joblib.load(MODEL_FILE)
-
-    # Extract input data from request
-    input_data = request.get_json()
-
-    if not input_data:
-        return jsonify({"error": "No input data provided"}), 400
-
-    try:
-        # Convert to DataFrame
-        df = pd.DataFrame([input_data])
-
-        # Feature engineering to match training
-        df["postcode_prefix"] = df["postcode"].str.extract(r"(\w+)")
-        df = pd.get_dummies(df, columns=["postcode_prefix", "heating_type", "epc_rating"], drop_first=True)
-
-        # Ensure columns match model input
-        model_features = model.feature_names_in_
-        for col in model_features:
-            if col not in df.columns:
-                df[col] = 0  # add missing columns with default 0
-
-        df = df[model_features]  # reorder to match
-
-        prediction = model.predict(df)[0]
-        return jsonify({"predicted_price": round(prediction, 2)})
-
-    except Exception as e:
-        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
-    print("🪵 Incoming auth header:", repr(auth_header))  # Full debug
-
+    print("🪵 Incoming auth header:", repr(auth_header))
     expected = f"Bearer {AUTH_TOKEN}"
     print("🧠 Expected auth header:", repr(expected))
 
@@ -105,6 +64,42 @@ def predict_endpoint():
     print("✅ Token accepted.")
     result = train_model()
     return jsonify(result)
-# Run the Flask app
+
+# /predict route
+@app.route("/predict", methods=["POST"])
+def predict_endpoint():
+    auth_header = request.headers.get("Authorization")
+    expected = f"Bearer {AUTH_TOKEN}"
+
+    if auth_header != expected:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    if not os.path.exists(MODEL_FILE):
+        return jsonify({"error": "Model file not found. Please train the model first."}), 400
+
+    model = joblib.load(MODEL_FILE)
+    input_data = request.get_json()
+
+    if not input_data:
+        return jsonify({"error": "No input data provided"}), 400
+
+    try:
+        df = pd.DataFrame([input_data])
+        df["postcode_prefix"] = df["postcode"].str.extract(r"(\w+)")
+        df = pd.get_dummies(df, columns=["postcode_prefix", "heating_type", "epc_rating"], drop_first=True)
+
+        # Match columns to model
+        model_features = model.feature_names_in_
+        for col in model_features:
+            if col not in df.columns:
+                df[col] = 0
+        df = df[model_features]
+
+        prediction = model.predict(df)[0]
+        return jsonify({"predicted_price": round(prediction, 2)})
+    except Exception as e:
+        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
+
+# Run app
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
