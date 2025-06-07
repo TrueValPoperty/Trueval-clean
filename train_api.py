@@ -8,27 +8,27 @@ import os
 
 app = Flask(__name__)
 
-# Config
+# Configuration
 DATA_FILE = "airtable_data.csv"
 MODEL_FILE = "ai_estimator.pkl"
-AUTH_TOKEN = "trueval-secret-2025"  
+AUTH_TOKEN = "trueval-secret-2025"  # Set your token here
 
-# Training logic
+# Core training logic
 def train_model():
     if not os.path.exists(DATA_FILE):
         return {"error": "Training data file not found."}, 400
 
     df = pd.read_csv(DATA_FILE)
-    df = df.dropna(subset=['price', 'bedrooms', 'postcode'])
+    df = df.dropna(subset=["price", "bedrooms", "postcode"])
 
     if df.empty:
         return {"error": "No valid training data available."}, 400
 
-    df['postcode_prefix'] = df['postcode'].str.extract(r'(\w+)')
-    df = pd.get_dummies(df, columns=['postcode_prefix', 'heating_type', 'epc_rating'], drop_first=True)
+    df["postcode_prefix"] = df["postcode"].str.extract(r"(\w+)")
+    df = pd.get_dummies(df, columns=["postcode_prefix", "heating_type", "epc_rating"], drop_first=True)
 
-    features = df.drop(columns=['price', 'postcode'])
-    labels = df['price']
+    features = df.drop(columns=["price", "postcode"])
+    labels = df["price"]
 
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=0.2, random_state=42)
     model = RandomForestRegressor(n_estimators=100, random_state=42)
@@ -45,16 +45,16 @@ def train_model():
         "features": list(features.columns)
     }
 
-# Flask endpoint
+# Token-protected training endpoint
 @app.route("/train", methods=["POST"])
 def train_endpoint():
-    token = request.headers.get("Authorization")
-    if token != f"Bearer {AUTH_TOKEN}":
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or auth_header != f"Bearer {AUTH_TOKEN}":
         return jsonify({"error": "Unauthorized"}), 403
 
     result = train_model()
     return jsonify(result)
 
-# Run the app
+# Run the Flask app
 if __name__ == "__main__":
     app.run(debug=True)
