@@ -11,7 +11,7 @@ app = Flask(__name__)
 # Config
 DATA_FILE = "airtable_data.csv"
 MODEL_FILE = "ai_estimator.pkl"
-AUTH_TOKEN = "your-secure-token-here"  # Replace this with your real token
+AUTH_TOKEN = "trueval-secret-2025"  
 
 # Training logic
 def train_model():
