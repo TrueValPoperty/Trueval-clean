@@ -8,12 +8,12 @@ import os
 
 app = Flask(__name__)
 
-# Configuration
+# Config
 DATA_FILE = "airtable_data.csv"
 MODEL_FILE = "ai_estimator.pkl"
-AUTH_TOKEN = "trueval-secret-2025"  # Set your token here
+AUTH_TOKEN = "trueval-secret-2025"
 
-# Core training logic
+# Training logic
 def train_model():
     if not os.path.exists(DATA_FILE):
         return {"error": "Training data file not found."}, 400
@@ -45,27 +45,22 @@ def train_model():
         "features": list(features.columns)
     }
 
-# /train route
+# /train endpoint
 @app.route("/train", methods=["POST"])
 def train_endpoint():
     auth_header = request.headers.get("Authorization")
-    print("🪵 Incoming auth header:", repr(auth_header))
     expected = f"Bearer {AUTH_TOKEN}"
-    print("🧠 Expected auth header:", repr(expected))
 
     if not auth_header:
-        print("❌ No Authorization header received.")
         return jsonify({"error": "Missing token"}), 403
 
     if auth_header != expected:
-        print("❌ Token mismatch.")
         return jsonify({"error": "Unauthorized"}), 403
 
-    print("✅ Token accepted.")
     result = train_model()
     return jsonify(result)
 
-# /predict route
+# /predict endpoint
 @app.route("/predict", methods=["POST"])
 def predict_endpoint():
     auth_header = request.headers.get("Authorization")
@@ -88,7 +83,6 @@ def predict_endpoint():
         df["postcode_prefix"] = df["postcode"].str.extract(r"(\w+)")
         df = pd.get_dummies(df, columns=["postcode_prefix", "heating_type", "epc_rating"], drop_first=True)
 
-        # Match columns to model
         model_features = model.feature_names_in_
         for col in model_features:
             if col not in df.columns:
@@ -102,4 +96,4 @@ def predict_endpoint():
 
 # Run app
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5050)
+    app.run(debug=True, host="0.0.0.0", port=5000)
