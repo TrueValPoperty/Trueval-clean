@@ -49,17 +49,22 @@ def train_model():
 @app.route("/train", methods=["POST"])
 def train_endpoint():
     auth_header = request.headers.get("Authorization")
-print(f"Received Authorization header: {auth_header}")
+    print("🪵 Incoming auth header:", repr(auth_header))  # Full debug
 
-if auth_header != f"Bearer {AUTH_TOKEN}":
-    print("❌ Unauthorized: Token does not match.")
-    return jsonify({"error": "Unauthorized"}), 403
+    expected = f"Bearer {AUTH_TOKEN}"
+    print("🧠 Expected auth header:", repr(expected))
 
-print("✅ Authorized request received.")
+    if not auth_header:
+        print("❌ No Authorization header received.")
+        return jsonify({"error": "Missing token"}), 403
 
+    if auth_header != expected:
+        print("❌ Token mismatch.")
+        return jsonify({"error": "Unauthorized"}), 403
+
+    print("✅ Token accepted.")
     result = train_model()
     return jsonify(result)
-
 # Run the Flask app
 if __name__ == "__main__":
     app.run(debug=True)
