@@ -93,7 +93,8 @@ def predict_endpoint():
         return jsonify({"predicted_price": round(prediction, 2)})
     except Exception as e:
         return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
-
+print("✅ Registered routes:")
+print(app.url_map)
 # Run app
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
