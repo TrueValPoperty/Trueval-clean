@@ -1,6 +1,4 @@
-name,lat,lon
-University of Oxford,51.754816,-1.254367
-University of Cambridge,52.204267,0.114908
-University College London,51.524559,-0.134040
-University of Manchester,53.466849,-2.233883
-University of Edinburgh,55.944425,-3.188396
+name,latitude,longitude
+University College London,51.5246,-0.134
+University of Manchester,53.4668,-2.2339
+University of Oxford,51.7548,-1.2544
