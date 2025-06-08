@@ -22,7 +22,7 @@ def student_score():
 
     user_location = (lat, lon)
 
-    # 🔍 Add this debug line
+   print(universities_df.columns)
     print("UNIVERSITY COLUMNS:", universities_df.columns)
 
     universities_df['distance_km'] = universities_df.apply(
