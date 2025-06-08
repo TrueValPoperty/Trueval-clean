@@ -23,8 +23,9 @@ def student_score():
     user_location = (lat, lon)
 
     universities_df['distance_km'] = universities_df.apply(
-    lambda row: geodesic(user_location, (row['lat'], row['lon'])).km,
-    axis=1
+        lambda row: geodesic(user_location, (row['lat'], row['lon'])).km,
+        axis=1
+    )
 
     nearest = universities_df.sort_values('distance_km').iloc[0]
     score = max(0, 100 - nearest['distance_km'])
