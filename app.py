@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify
 import pandas as pd
 from geopy.distance import geodesic
@@ -22,7 +23,6 @@ def student_score():
 
     user_location = (lat, lon)
 
-    # Use correct column names: lat and lon
     universities_df['distance_km'] = universities_df.apply(
         lambda row: geodesic(user_location, (row['lat'], row['lon'])).km,
         axis=1
