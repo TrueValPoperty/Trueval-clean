@@ -4,12 +4,12 @@ from geopy.distance import geodesic
 
 app = Flask(__name__)
 
-# Load universities dataset
+# Load university data once
 universities_df = pd.read_csv('universities.csv')
 
 @app.route('/')
 def index():
-    return "TrueVal Student Investment Score API"
+    return "TrueVal API is live."
 
 @app.route('/student-score', methods=['POST'])
 def student_score():
