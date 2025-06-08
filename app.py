@@ -4,7 +4,7 @@ from geopy.distance import geodesic
 
 app = Flask(__name__)
 
-# Load universities.csv from the same directory
+# Load universities dataset
 universities_df = pd.read_csv('universities.csv')
 
 @app.route('/')
