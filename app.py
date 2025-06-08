@@ -22,6 +22,9 @@ def student_score():
 
     user_location = (lat, lon)
 
+    # 🔍 Add this debug line
+    print("UNIVERSITY COLUMNS:", universities_df.columns)
+
     universities_df['distance_km'] = universities_df.apply(
         lambda row: geodesic(user_location, (row['lat'], row['lon'])).km,
         axis=1
