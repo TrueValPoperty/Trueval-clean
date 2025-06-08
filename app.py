@@ -22,7 +22,6 @@ def student_score():
 
     user_location = (lat, lon)
 
-   print(universities_df.columns)
     print("UNIVERSITY COLUMNS:", universities_df.columns)
 
     universities_df['distance_km'] = universities_df.apply(
@@ -40,4 +39,4 @@ def student_score():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
