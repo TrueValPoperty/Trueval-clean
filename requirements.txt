@@ -1,4 +1,3 @@
-flask
-joblib
-pandas
-scikit-learn
+Flask
+flask-cors
+geopy

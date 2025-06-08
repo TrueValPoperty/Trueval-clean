@@ -1,33 +1,41 @@
-
-from flask import Flask, request, jsonify
-import joblib
-import traceback
-import numpy as np
-import pandas as pd
+from flask import Flask, jsonify
+from flask_cors import CORS
+import csv
+from geopy.distance import geodesic
 
 app = Flask(__name__)
+CORS(app)
 
-try:
-    model = joblib.load("ai_estimator.pkl")
-except Exception as e:
-    print("Model load failed:", e)
-    model = None
+UNIVERSITIES = []
 
-@app.route('/')
-def index():
-    return "TrueVal AI Property Valuation API"
+def load_universities():
+    global UNIVERSITIES
+    with open("universities.csv", newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            UNIVERSITIES.append({
+                "name": row["name"],
+                "lat": float(row["lat"]),
+                "lon": float(row["lon"])
+            })
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    if model is None:
-        return jsonify({'error': 'Model not loaded'}), 500
-    try:
-        input_data = request.get_json()
-        df = pd.DataFrame([input_data])
-        prediction = model.predict(df)[0]
-        return jsonify({'predicted_price': prediction})
-    except Exception as e:
-        return jsonify({'error': str(e), 'trace': traceback.format_exc()}), 400
+load_universities()
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+def nearest_university(lat, lon):
+    property_coords = (lat, lon)
+    closest = min(
+        UNIVERSITIES,
+        key=lambda uni: geodesic(property_coords, (uni["lat"], uni["lon"])).km
+    )
+    distance_km = geodesic(property_coords, (closest["lat"], closest["lon"])).km
+    return {
+        "university": closest["name"],
+        "distance_km": round(distance_km, 2)
+    }
+
+@app.route("/nearest_university/<float:lat>/<float:lon>")
+def get_nearest_uni(lat, lon):
+    return jsonify(nearest_university(lat, lon))
+
+if __name__ == "__main__":
+    app.run(debug=True)
